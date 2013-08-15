@@ -5,6 +5,7 @@ import it.unical.mat.aspide.lgpl.bridgePlugin.model.StorageSupport;
 import it.unical.mat.aspide.lgpl.plugin.environment.AspideProject;
 import it.unical.mat.aspide.lgpl.plugin.interfaces.*;
 import it.unical.mat.aspide.plugins.Sparc.exceptions.ParseException;
+import warnings.Pair;
 
 import javax.swing.*;
 import java.io.File;
@@ -13,6 +14,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SparcProgramHandler extends InputStorageAdapter{
     List<GenericError> errors;
@@ -64,7 +67,9 @@ public class SparcProgramHandler extends InputStorageAdapter{
                     e1.printStackTrace();
                 }
             }
+            final ErrorMessage msg=new ErrorMessage(e.getMessage());
             GenericError error = new GenericError() {
+
                 @Override
                 public void setWarning(boolean isWarning) {
 
@@ -77,8 +82,7 @@ public class SparcProgramHandler extends InputStorageAdapter{
 
                 @Override
                 public boolean isWarning() {
-                    // TODO Auto-generated method stub
-                    return false;
+                    return e.getMessage().startsWith("WARNING:");
                 }
 
                 @Override
@@ -88,17 +92,17 @@ public class SparcProgramHandler extends InputStorageAdapter{
 
                 @Override
                 public String getMessage() {
-                    return e.getMessage();
+                    return msg.message;
                 }
 
                 @Override
                 public int getLine() {
-                    return 0;
+                    return msg.lineNumber;
                 }
 
                 @Override
                 public int getColumn() {
-                    return 0;
+                    return msg.columnNumber;
                 }
             };
             //JOptionPane.showMessageDialog(null, "10");
@@ -112,4 +116,58 @@ public class SparcProgramHandler extends InputStorageAdapter{
     public void clearErrors(){
         errors = new LinkedList<GenericError>();
     }
+}
+
+/**
+
+ * Class for error message representation
+ */
+class ErrorMessage {
+    int lineNumber;
+    int columnNumber;
+    String message;
+
+    /**
+     * Constructor
+     * @param rawMessage produced by SPARC to ASP translator
+     *   store original message with some auxiliary information removed in message field
+     *   and line and column number fetched from the error message  in lineNumber and columnNumber fields
+     */
+
+    /**
+     */
+    public ErrorMessage(String rawMessage) {
+        StringBuilder newMessage=new StringBuilder();
+        lineNumber=0;
+        columnNumber=0;
+        if(rawMessage.startsWith("ERROR:"))
+        {
+            rawMessage=rawMessage.substring(6);
+        }
+        if(rawMessage.startsWith("WARNING:")) {
+            rawMessage=rawMessage.substring(8);
+        }
+
+        Pattern pattern =
+                Pattern.compile("at\\s+[lL]ine\\s+[1-9][0-9]*\\s*,\\s*column\\s+[1-9][0-9]*");
+
+        Matcher matcher =
+                pattern.matcher(rawMessage);
+
+        if (matcher.find()) {
+            message=rawMessage.substring(0,matcher.start())+rawMessage.substring(matcher.end());
+            String lineColumnString=rawMessage.substring(matcher.start(),matcher.end());
+            Pattern numberPattern=Pattern.compile("[1-9][0-9]*");
+            Matcher numberMatcher=numberPattern.matcher(lineColumnString);
+            numberMatcher.find();
+            lineNumber=Integer.parseInt(lineColumnString.substring(numberMatcher.start(),numberMatcher.end()));
+            numberMatcher.find();
+            columnNumber=Integer.parseInt(lineColumnString.substring(numberMatcher.start(),numberMatcher.end()));
+        }
+        else {
+            message=rawMessage;
+        }
+    }
+
+
 }
