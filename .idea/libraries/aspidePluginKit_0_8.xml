@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="aspidePluginKit-0.8">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/aspidePluginKit-0.13.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
