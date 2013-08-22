@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pluginlist>
+	<plugin>
+		<jar>
+			SparcPlugin.jar
+		</jar>
+		<url>
+			https://github.com/iensen/sparc_aspide/blob/master/out/artifacts/SparcPlugin_jar/SparcPlugin.jar?raw=true
+		</url>
+		<name>
+			ASPIDE SPARC Handler
+		</name>
+		<version>
+			0.7
+		</version>
+		<author>
+			Evgenii Balai, Kristian Reale
+		</author>
+		<type>
+			INPUT,REWRITING
+		</type>
+		<lib/>
+		<licence>
+			ASPIDE ASP SPARC Handler
+
+			Copyright (C) 2012 Evgenii Balai, Kristian Reale
+
+			This program is free for academic and educational use, as well as for use by 
+			non-profit organisations. For further information (such as information on
+			commercial use) please contact us. 
+
+			THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+			INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+			AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. iN NO EVENT SHALL THE 
+			COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT INCIDENTAL, 
+			SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+			PROCUREMENT OF SUBSTITUTE GOODS OF SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+			OF BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+			WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OF 
+			OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+			EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.		
+		</licence>
+		<description>
+			The plugin allows for sorted answer set programming language with consistency restoring rules.
+
+			The language follows the syntax described in https://github.com/iensen/sparc/wiki
+		</description>
+	</plugin>
+</pluginlist>
