@@ -11,7 +11,7 @@
 			ASPIDE SPARC Handler
 		</name>
 		<version>
-			0.7
+			0.8
 		</version>
 		<author>
 			Evgenii Balai, Kristian Reale
@@ -23,7 +23,7 @@
 		<licence>
 			ASPIDE ASP SPARC Handler
 
-			Copyright (C) 2012 Evgenii Balai, Kristian Reale
+			Copyright (C) 2013 Evgenii Balai, Kristian Reale
 
 			This program is free for academic and educational use, as well as for use by 
 			non-profit organisations. For further information (such as information on

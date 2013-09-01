@@ -272,7 +272,7 @@ public class InstanceGenerator {
 	/**
 	 * Generate all instances of concatenation
 	 * 
-	 * @param jjtGetChild
+	 * @param concatenationExpr
 	 *            AST node describing the concatenation
 	 * @return all the instances obtained by the concatenation
 	 * @throws ParseException
@@ -336,7 +336,7 @@ public class InstanceGenerator {
 		result.add(from);
 		String currentString = from;
 		int maxLength = to.length();
-		while ((currentString = generateNextString(currentString, maxLength)) != null) {
+		while ((currentString = generateNextString(currentString, maxLength)) != null && currentString.compareTo(to)<=0) {
 			result.add(currentString);
 		}
 		return result;

@@ -38,42 +38,44 @@ public class ASTterm extends SimpleNode {
 	
 	}
 
-	public ASTterm(String image) {
-		super(SparcTranslatorTreeConstants.JJTTERM);
-		Pair<String, ArrayList<String>> recordContents = StringListUtils
-				.splitTerm(image);
-		if (recordContents != null) {
-			ASTsymbolicFunction func = new ASTsymbolicFunction(
-					SparcTranslatorTreeConstants.JJTSYMBOLICFUNCTION);
-			func.image = recordContents.first + "(";
-			ASTtermList termList = new ASTtermList(
-					SparcTranslatorTreeConstants.JJTTERMLIST);
-			for (int i = 0; i < recordContents.second.size(); i++) {
-				ASTterm newTerm = new ASTterm(recordContents.second.get(i));
-				termList.jjtAddChild(newTerm, i);
-			}
-			this.jjtAddChild(func, 0);
-			this.jjtAddChild(termList, 1);
+    public ASTterm(String image) {
+        super(SparcTranslatorTreeConstants.JJTTERM);
+        Pair<String, ArrayList<String>> recordContents = StringListUtils
+                .splitTerm(image);
+        if (recordContents != null) {
+            ASTsymbolicFunction func = new ASTsymbolicFunction(
+                    SparcTranslatorTreeConstants.JJTSYMBOLICFUNCTION);
+            func.image = recordContents.first + "(";
+            ASTtermList termList = new ASTtermList(
+                    SparcTranslatorTreeConstants.JJTTERMLIST);
+            for (int i = 0; i < recordContents.second.size(); i++) {
+                ASTterm newTerm = new ASTterm(recordContents.second.get(i));
+                termList.jjtAddChild(newTerm, i);
+            }
+            ASTsymbolicTerm sterm = new ASTsymbolicTerm(
+                    SparcTranslatorTreeConstants.JJTSYMBOLICTERM);
+            sterm.jjtAddChild(func, 0);
+            sterm.jjtAddChild(termList, 1);
+            this.jjtAddChild(sterm, 0);
+        } else {
+            if(!Character.isLowerCase(image.charAt(0))) {
+                ASTvar var=new ASTvar(SparcTranslatorTreeConstants.JJTVAR);
+                var.image=image;
+                this.jjtAddChild(var, 0);
+            }
+            else {
+                ASTsymbolicConstant sconstant = new ASTsymbolicConstant(
+                        SparcTranslatorTreeConstants.JJTSYMBOLICCONSTANT);
+                sconstant.image = image;
+                ASTsymbolicTerm sterm = new ASTsymbolicTerm(
+                        SparcTranslatorTreeConstants.JJTSYMBOLICTERM);
+                sterm.jjtAddChild(sconstant, 0);
+                this.jjtAddChild(sterm, 0);
+            }
+        }
+    }
 
-		} else {
-			if(!Character.isLowerCase(image.charAt(0))) {
-				ASTvar var=new ASTvar(SparcTranslatorTreeConstants.JJTVAR);
-				var.image=image;
-				this.jjtAddChild(var, 0);
-			}
-			else {
-			ASTsymbolicConstant sconstant = new ASTsymbolicConstant(
-					SparcTranslatorTreeConstants.JJTSYMBOLICCONSTANT);
-			sconstant.image = image;
-			ASTsymbolicTerm sterm = new ASTsymbolicTerm(
-					SparcTranslatorTreeConstants.JJTSYMBOLICTERM);
-			sterm.jjtAddChild(sconstant, 0);
-			this.jjtAddChild(sterm, 0);
-			}
-		}
-	}
-	
-	public ASTterm(String recordName,ArrayList<String> varArgs) {
+    public ASTterm(String recordName,ArrayList<String> varArgs) {
 		super(SparcTranslatorTreeConstants.JJTTERM);
 		ASTsymbolicFunction symFunction = new ASTsymbolicFunction(
 				SparcTranslatorTreeConstants.JJTSYMBOLICFUNCTION);
