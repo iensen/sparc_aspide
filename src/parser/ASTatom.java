@@ -2,8 +2,6 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package parser;
 
-
-
 public
 class ASTatom extends SimpleNode {
   public ASTatom(int id) {
@@ -48,5 +46,7 @@ class ASTatom extends SimpleNode {
 	  }
 	   
   }
+ 
 }
+ 
 /* JavaCC - OriginalChecksum=68be2106f288cf287b9a442791f7190c (do not edit this line) */

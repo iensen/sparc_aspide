@@ -6,11 +6,14 @@ import sorts.BuiltIn;
 
 public class ExpandSolve {
     public static int CountOK=0;
-	public static boolean run(Formula F) throws FileNotFoundException {
+	public static boolean run(Formula F) {
 		boolean result = false;
-
+		try {
 			result = run(F, null, null);
+		} catch (FileNotFoundException e) {
 
+			e.printStackTrace();
+		}
 		return result;
 	}
 

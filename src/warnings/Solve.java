@@ -119,15 +119,24 @@ public class Solve {
 		}
 
 		rule.reorderBodyAtoms();
+		HashSet<String> newVariables=rule.fetchArithmeticsIntoIsAtoms();
+		arithmeticVariables.addAll(newVariables);
+		rule.addVarRangeAtom(arithmeticVariables);
 		rule.addLabelingAtom(arithmeticVariables);
-
+        
 		pProlog.append(rule.toString());
 		pProlog.append(System.getProperty("line.separator"));
 		pProlog.append("main :-(p -> writeln(yes) ; writeln(no)).");
 		pProlog.append(System.getProperty("line.separator"));
 		boolean result = true;
-	    PrologSolver prologProgram = new PrologSolver(pProlog.toString());
-		result = prologProgram.isSatisfiable();
+		try {
+			PrologSolver prologProgram = new PrologSolver(pProlog.toString());
+			result = prologProgram.isSatisfiable();
+		} catch (FileNotFoundException ex) {
+			System.err.println("WARNING:" + ex.getMessage());
+			System.err.println("Warnings will not be displayed");
+
+		}
 		return result;
 	}
 

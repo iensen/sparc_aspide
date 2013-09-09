@@ -1,9 +1,9 @@
 package translating;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import parser.ASTaggregateElement;
@@ -29,10 +29,13 @@ import parser.ParseException;
 import parser.SimpleNode;
 import parser.SparcTranslator;
 import parser.SparcTranslatorTreeConstants;
+import sorts.BuiltIn;
 import translating.InstanceGenerator.GSort;
 import warnings.ExpandSolve;
 import warnings.Formula;
+import warnings.Pair;
 import warnings.RuleReducer;
+import warnings.StringListUtils;
 import warnings.WarningRuleCreator;
 
 public class Translator {
@@ -64,6 +67,15 @@ public class Translator {
 	
 	private RuleReducer ruleReducer;
 
+	/**
+	 * Constructor
+	 * 
+	 * @param sortNameToExpression
+	 * @param predicateArgumentSorts
+	 * @param ruleLabels
+	 * @param out
+	 * @param mainTranslator
+	 */
 	public Translator(
 
 	Writer out, SparcTranslator mainTranslator, InstanceGenerator gen,
@@ -110,9 +122,8 @@ public class Translator {
 	 */
 	public String translateProgram(ASTprogram program,
 			HashSet<String> generatingSorts, boolean writeWarningsToSTDERR)
-            throws ParseException, FileNotFoundException {
+			throws ParseException {
 		translatedOutput = new StringBuilder();
-
 		localElemCount = 0;
 		labelId = 0;
 
@@ -121,8 +132,8 @@ public class Translator {
 			gen.addSort(s2, sortNameToExpression.get(s), true);
 		}
 
-		translateDirectives(program);
-		translateRules((ASTprogramRules) program.jjtGetChild(2));
+		writeDirectives(program);
+		translateRules((ASTprogramRules) program.jjtGetChild(2),writeWarningsToSTDERR);
 		// append instances of generating sorts to the resulting program store
 		for (GSort sort : gen.generatedSorts) {
 			for (String instance : sort.instances) {
@@ -143,7 +154,7 @@ public class Translator {
 			// warningsStrings.
 			warningStrings.append("%WARNINGS");
 			for (String warning : mainTranslator.getWarnings()) {
-				warningStrings.append("%WARNING: " + warning);
+				warningStrings.append(" %WARNING: " + warning);
 			}
 			if (mainTranslator.getWarnings().size() > 0) {
 				throw new ParseException(warningStrings.toString());
@@ -158,10 +169,14 @@ public class Translator {
 	/**
 	 * Rewrite #const and #maxint directives from SPARC to DLV program
 	 * 
-	 * @param program
-	 *            root of program abstract syntax tree
+	 * @param root
+	 *            of program abstract syntax tree
 	 */
-	private void translateDirectives(ASTprogram program) {
+	private void writeDirectives(ASTprogram program) {
+		//add #maxint:
+		appendStringToTranslation("#maxint="+BuiltIn.getMaxInt()+".");
+		appendNewLineToTranslation();
+		//add other directives
 		for (String s : program.getdirectives()) {
 			appendStringToTranslation(s);
 			appendNewLineToTranslation();
@@ -191,19 +206,19 @@ public class Translator {
 	 *             the case in aggregate or choice rules where there is no
 	 *             constraints for variable in the body).
 	 */
-	private void translateRules(ASTprogramRules rules) throws ParseException, FileNotFoundException {
+	private void translateRules(ASTprogramRules rules,boolean writeWarningsToSTDERR) throws ParseException {
 		for (int i = 0; i < rules.jjtGetNumChildren(); i++) {
-			translateRule((ASTprogramRule) rules.jjtGetChild(i));
+			translateRule((ASTprogramRule) rules.jjtGetChild(i),writeWarningsToSTDERR);
 		}
 	}
 
 
 	
 	public String translateAndWriteRules(ASTprogramRules rules,
-			boolean writeWarningsToSTDERR) throws ParseException, FileNotFoundException {
+			boolean writeWarningsToSTDERR) throws ParseException {
 		translatedOutput = new StringBuilder();
 
-		translateRules(rules);
+		translateRules(rules,writeWarningsToSTDERR);
 		writeTranslatedProgram();
 		if (writeWarningsToSTDERR) {
 			for (String warning : mainTranslator.getWarnings()) {
@@ -243,6 +258,9 @@ public class Translator {
 	 */
 	private void addAtomsToBody(ASTbody body, ArrayList<ASTatom> atoms) {
 		HashSet<String> addedAtoms = new HashSet<String>();
+		for(int i=0;i<body.jjtGetNumChildren();i++) {
+			addedAtoms.add(((ASTatom)body.jjtGetChild(i)).toString());
+		}
 		for (int i = 0; i < atoms.size(); i++) {
 			if (!addedAtoms.contains(atoms.get(i).toString())) {
 				body.jjtAddChild(atoms.get(i), body.jjtGetNumChildren());
@@ -427,7 +445,7 @@ public class Translator {
 		VariableFetcher vf = new VariableFetcher();
 		ExpressionFetcher ef = new ExpressionFetcher(vf.fetchVariables(rule));
 		newAtoms.addAll(ef.fetchGlobalExpressions(rule));
-		addAtomsToRulesBody(rule, newAtoms);
+		//addAtomsToRulesBody(rule, newAtoms);
 		newBodyAtoms.addAll(newAtoms);
 	}
 
@@ -450,7 +468,7 @@ public class Translator {
 	 * bodies Example: p(X+1):q(X+2). becomes p(Y):p(Z),Y=X+1,Z=X+2, where Y and
 	 * Z are new variables in the rule
 	 * 
-	 * @param node
+	 * @param rule
 	 *            to be processed
 	 */
 	private void fetchLocalExpressions(SimpleNode node,
@@ -468,7 +486,6 @@ public class Translator {
 				addAtomsToChoiceElement((ASTchoice_element) node,
 						ef.fetchLocalExpressions((ASTchoice_element) node));
 			}
-			variables.addAll(ef.createdVariables.keySet());
 		}
 		// recursively search for aggregate and choice elements
 		for (int i = 0; i < node.jjtGetNumChildren(); i++) {
@@ -497,7 +514,10 @@ public class Translator {
 	 * of the rule and add atoms, specifying sort of the terms to the body of
 	 * the corresponding aggregates and choice rules.
 	 * 
-	 * @param node
+	 * @param rule
+	 * @param fetchedTerms
+	 *            mapping between string representation of terms and arrayList
+	 *            of all sort the term must belong to.
 	 */
 	private void fetchLocalTerms(SimpleNode node) throws ParseException {
 		boolean isAggregateElement = node.getId() == SparcTranslatorTreeConstants.JJTAGGREGATEELEMENT;
@@ -515,10 +535,8 @@ public class Translator {
 			ArrayList<ASTatom> newAtoms = new ArrayList<ASTatom>();
 			for (ASTterm term : localFetchedTerms.keySet()) {
 				String sortName = localFetchedTerms.get(term);
-				String sortName2 = predicateArgumentSorts.get("#" + sortName)
-						.get(0);
-				newAtoms.add(createSortAtom(sortName2, term));
-				gen.addSort(sortName2, sortNameToExpression.get(sortName), true);
+				newAtoms.add(createSortAtom(sortName, term));
+				gen.addSort(sortName, sortNameToExpression.get(sortName), true);
 			}
 			if (isAggregateElement) {
 				addAtomsToAggregateElement((ASTaggregateElement) node, newAtoms);
@@ -540,6 +558,9 @@ public class Translator {
 	 * corresponding aggregates and choice rules.
 	 * 
 	 * @param rule
+	 * @param fetchedTerms
+	 *            mapping between string representation of terms and arrayList
+	 *            of all sort the term must belong to.
 	 */
 	private void fetchLocalTerms(ASTprogramRule rule) throws ParseException {
 		fetchLocalTerms((SimpleNode) rule);
@@ -550,7 +571,9 @@ public class Translator {
 	 * of the terms to the body of the rule.
 	 * 
 	 * @param rule
-          of all sort the term must belong to.
+	 * @param fetchedTerms
+	 *            mapping between string representation of terms and arrayList
+	 *            of all sort the term must belong to.
 	 */
 	private void fetchGlobalTerms(ASTprogramRule rule,
 			ArrayList<ASTatom> newBodyAtoms) throws ParseException {
@@ -559,31 +582,14 @@ public class Translator {
 		ArrayList<ASTatom> newAtoms = new ArrayList<ASTatom>();
 		for (ASTterm term : globalFetchedTerms.keySet()) {
 			String sortName = globalFetchedTerms.get(term);
-			String sortName2 = predicateArgumentSorts.get("#" + sortName)
-					.get(0);
-			newAtoms.add(createSortAtom(sortName2, term));
-			gen.addSort(sortName2, sortNameToExpression.get(sortName), true);
+			newAtoms.add(createSortAtom(sortName, term));
+			gen.addSort(sortName, sortNameToExpression.get(sortName), true);
 		}
-		addAtomsToRulesBody(rule, newAtoms);
+		//addAtomsToRulesBody(rule, newAtoms);
 		newBodyAtoms.addAll(newAtoms);
 	}
 
-	/**
-	 * find unrestricted variables in the rule
-	 * 
-	 * @param rule
-	 *            AST node describing the rules
-	 * @return hash-set of found unrestricted variables
-	 */
-	private HashSet<String> getUnrestrictedVars(ASTprogramRule rule) {
-		HashSet<String> unboundedVars = new HashSet<String>();
-		HashSet<String> boundedVars = new HashSet<String>();
-		fetchVariables(unboundedVars, boundedVars, rule, false);
-		unboundedVars.removeAll(boundedVars);
-		return unboundedVars;
-	}
-
-	/**
+     /**
 	 * Go over the AST node and fill sets of unbounded and bounded variables
 	 * 
 	 * @param unboundedVariables
@@ -595,32 +601,31 @@ public class Translator {
 	 * @param scope
 	 *            true if node is a child of a simpleAtom(either
 	 */
-	private void fetchVariables(HashSet<String> unboundedVariables,
-			HashSet<String> boundedVariables, SimpleNode node, boolean scope) {
+	private void classifyVariables(HashSet<String> allVariables,
+			HashSet<String> simpleOccurVariables, HashSet<String> arithmeticVariables, SimpleNode node, boolean predicateScope, boolean arithmeticScope) {
 		if (node.getId() == SparcTranslatorTreeConstants.JJTVAR) {
-			if (scope)
-				boundedVariables.add(node.toString());
-			else
-				unboundedVariables.add(node.toString());
+			if(predicateScope && ! arithmeticScope) 
+				simpleOccurVariables.add(node.toString());
+			if(arithmeticScope) 
+				arithmeticVariables.add(node.toString());
+			allVariables.add(node.toString());
 		}
 		if (node.getId() == SparcTranslatorTreeConstants.JJTEXTENDEDNONRELATOM
 				|| node.getId() == SparcTranslatorTreeConstants.JJTNONRELATOM) {
-			scope = true;// root of predicate;
+			predicateScope = true;// root of predicate;
 		}
-
-		if (node.getId() == SparcTranslatorTreeConstants.JJTATOM
-				|| node.getId() == SparcTranslatorTreeConstants.JJTSIMPLEATOM) {
-			if (node.image != null && node.image.equals("=")) {
-				fetchVariables(unboundedVariables, boundedVariables,
-						(SimpleNode) node.jjtGetChild(0), true);
-				fetchVariables(unboundedVariables, boundedVariables,
-						(SimpleNode) node.jjtGetChild(1), false);
+		
+		if(node.getId()==SparcTranslatorTreeConstants.JJTARITHMETICTERM) {
+			String nodeImage=node.toString();
+			if(nodeImage.indexOf('+')!=-1 || nodeImage.indexOf('-')!=-1 || nodeImage.indexOf('*')!=-1) {
+				arithmeticScope=true;
 			}
 		}
 
+
 		for (int i = 0; i < node.jjtGetNumChildren(); i++) {
-			fetchVariables(unboundedVariables, boundedVariables,
-					(SimpleNode) node.jjtGetChild(i), scope);
+			classifyVariables(allVariables, simpleOccurVariables, arithmeticVariables,
+					(SimpleNode) node.jjtGetChild(i),predicateScope,arithmeticScope);
 		}
 	}
 
@@ -632,10 +637,8 @@ public class Translator {
 	 * @throws ParseException
 	 *             if sort of some variable cannot be detected
 	 */
-	private void translateRule(ASTprogramRule rule) throws ParseException, FileNotFoundException {
+	private void translateRule(ASTprogramRule rule,boolean writeWarningsToSTDERR) throws ParseException {
 		
-		
-	
 		String originalRule = rule.toString();
 		int lineNumber = rule.getBeginLine();
 		int columnNumber = rule.getBeginColumn();
@@ -646,30 +649,29 @@ public class Translator {
 	     // System.err.println(ruleF.toString());
 	     
 	      if(ruleF!=null && !ExpandSolve.run(ruleF)) {
-	    	 throw new ParseException("WARNING: Rule "+originalRule+" at line "+lineNumber+
-	    			 ", column "+columnNumber+" is an empty rule"); 
+	    	 if(writeWarningsToSTDERR) {
+	    	    System.err.println("%WARNING: Rule "+originalRule+" at line "+lineNumber+
+	    			 ", column "+columnNumber+" is an empty rule");
+	    	 } else {
+	    		 mainTranslator.addWarning("Rule "+originalRule+" at line "+lineNumber+
+		    			 ", column "+columnNumber+" is an empty rule");
+	    	 }
 	      }
 		}
 		
-		
-		
-
-		//check unrestricted Variables:
-		HashSet<String> unrestrictedVars=getUnrestrictedVars(rule);
-		if(!unrestrictedVars.isEmpty()) {
-			throw new ParseException(inputFileName + ": "
-					+ "program rule "+rule.toString()
-					+ " at line " + rule.getBeginLine() + ", column "
-					+ rule.getBeginColumn()
-					+ " contains unrestricted variables: "+unrestrictedVars.toString());
-		}
 		
 		// renameLocalVariables
 		HashMap<String, String> originalNameMapping = new HashMap<String, String>();
 		appendToVariableNamesIn(rule, "_G", originalNameMapping);
 		renameLocalVariables(rule,originalNameMapping);
-        
 		ArrayList<ASTatom> newSortAtoms=new ArrayList<ASTatom>();
+		
+		ensureVariableSafety(rule, originalRule, originalNameMapping,
+				newSortAtoms);
+		//after this we need to add extra sort for nat:
+		String natSortName=predicateArgumentSorts.get("#nat").get(0);
+		predicateArgumentSorts.put(natSortName,new ArrayList<String>(Arrays.asList(natSortName)));
+	
 		// fetch expressions:
 		fetchGlobalExpressions(rule,newSortAtoms);
 		fetchLocalExpressions(rule);
@@ -677,7 +679,7 @@ public class Translator {
 		fetchGlobalTerms(rule,newSortAtoms);
 		fetchLocalTerms(rule);
 		
-		
+		addAtomsToRulesBody(rule,newSortAtoms);
 		// add rules for warnings
 		if(generateASPWarnings)
 		{
@@ -688,9 +690,6 @@ public class Translator {
 			appendNewLineToTranslation();
 	      }
 		}
-		
-	
-		
 	
 		RuleAnalyzer ra = new RuleAnalyzer(rule);
 		// add new weak constraints and rules for a CR-rule
@@ -723,6 +722,107 @@ public class Translator {
 		appendNewLineToTranslation();
 	}
 
+	private void ensureVariableSafety(ASTprogramRule rule, String originalRule,
+			HashMap<String, String> originalNameMapping,
+			ArrayList<ASTatom> newSortAtoms) throws ParseException {
+		HashSet<String> simpleOccurVariables =new HashSet<String>();
+		HashSet<String> allVariables=new HashSet<String>();
+		HashSet<String> arithmeticVariables=new HashSet<String>();
+		final boolean arithmeticScope=false;
+		final boolean predicateScope=false;
+		
+		classifyVariables(allVariables, simpleOccurVariables, arithmeticVariables, 
+				rule, predicateScope, arithmeticScope);
+		
+		
+		allVariables.removeAll(simpleOccurVariables);
+		allVariables.removeAll(arithmeticVariables);
+		
+		if(!allVariables.isEmpty()) {
+			Pair<ArrayList<String>,ArrayList<String>> unrestrictedVariablesLists=splitLocalGlobalVariables(allVariables);
+			renameVariables(unrestrictedVariablesLists.first, originalNameMapping);
+			renameVariables(unrestrictedVariablesLists.second,originalNameMapping);
+			throw new ParseException(inputFileName + ": "
+					+ "program rule "+originalRule
+					+ " at line " + rule.getBeginLine() + ", column "
+					+ rule.getBeginColumn()
+					+ " contains unrestricted "
+					+(unrestrictedVariablesLists.first.size()>0?
+					  "global variables "+ StringListUtils.getSeparatedList(unrestrictedVariablesLists.first, ","):"") +
+					(unrestrictedVariablesLists.second.size()>0 ?
+							((unrestrictedVariablesLists.first.size()>0)? " and ":"")+
+					"unrestricted local variables "+ StringListUtils.getSeparatedList(unrestrictedVariablesLists.second, ","):""));
+					
+		}
+		arithmeticVariables.removeAll(simpleOccurVariables);
+		if(!arithmeticVariables.isEmpty()) {
+			String s2 = predicateArgumentSorts.get("#nat").get(0);
+			gen.addSort(s2, sortNameToExpression.get("nat"), true);
+			Pair<ArrayList<String>,ArrayList<String>> unrestrictedArithmVariablesLists=splitLocalGlobalVariables(arithmeticVariables);
+			//add some #nat atoms to the body:
+			for(int i=0;i<unrestrictedArithmVariablesLists.first.size();i++)
+			{
+			       newSortAtoms.add(createSortAtom(predicateArgumentSorts.get("#nat").get(0), new ASTterm(unrestrictedArithmVariablesLists.first.get(i))));
+			}
+		    if(!unrestrictedArithmVariablesLists.second.isEmpty()) {
+		    	//add some nat atoms to the body of local elements
+		    	 addNatAtomsForLocalVariables(rule,unrestrictedArithmVariablesLists.second);
+		    }
+		}
+	}
+     /**
+      * Split the set of variables into two array lists of local and global variables
+      * @return Pair<ArrayList<String>, ArrayList<String> > 
+      * the pair of lists. the first list will contain global variables
+      * and the second list will contain local variables.
+      */
+	Pair<ArrayList<String>, ArrayList<String>> splitLocalGlobalVariables(HashSet<String> variables) {
+		Pair<ArrayList<String>,ArrayList<String>> result=new Pair<ArrayList<String>,ArrayList<String>>(new ArrayList<String>(), new ArrayList<String>());
+		for(String varName:variables) {
+			if(varName.endsWith("_G"))
+			  result.first.add(varName);
+			else 
+			  result.second.add(varName);
+		}
+		return result;
+	}
+	/**
+	 * Recursively search for aggregates and choice rules and add #nat atoms for corresponding 
+	 * bodies
+	 * @param n
+	 */
+	private void addNatAtomsForLocalVariables(SimpleNode n,ArrayList<String> variablesToAdd) {
+		if(n.getId()==SparcTranslatorTreeConstants.JJTAGGREGATEELEMENT || 
+				n.getId()==SparcTranslatorTreeConstants.JJTCHOICE_ELEMENT) {
+			VariableFetcher vf=new VariableFetcher();
+			HashSet<String> variablesInElement=new HashSet<String>();
+			vf.fetchVariables(n,variablesInElement);
+			for(String varName:variablesToAdd) {
+				if(variablesInElement.contains(varName)) {
+					ASTatom atomToAdd=createSortAtom(predicateArgumentSorts.get("#nat").get(0),new ASTterm(varName));
+					ArrayList<ASTatom> atomListToAdd=new ArrayList<ASTatom>( Arrays.asList(atomToAdd));
+					
+					if(n.getId()==SparcTranslatorTreeConstants.JJTAGGREGATEELEMENT) {
+						addAtomsToAggregateElement((ASTaggregateElement)n, atomListToAdd);
+					}
+					else {
+						addAtomsToChoiceElement((ASTchoice_element)n, atomListToAdd);					}
+				}
+			}
+		}
+		
+		for(int i=0;i<n.jjtGetNumChildren();i++) {
+			addNatAtomsForLocalVariables((SimpleNode)n.jjtGetChild(i), variablesToAdd);
+		}
+	}
+	/**
+	 * Rename variables in the list according to provided mapping
+	 */
+	private void renameVariables(ArrayList<String> variables, HashMap<String,String> nameMapping) {
+		for(int i=0;i<variables.size();i++) {
+			variables.set(i,nameMapping.get(variables.get(i)));
+		}
+	}
 	/**
 	 * Create sort atom (consisting of sort name and one argument)
 	 * 

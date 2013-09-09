@@ -272,7 +272,7 @@ public class InstanceGenerator {
 	/**
 	 * Generate all instances of concatenation
 	 * 
-	 * @param concatenationExpr
+	 * @param jjtGetChild
 	 *            AST node describing the concatenation
 	 * @return all the instances obtained by the concatenation
 	 * @throws ParseException

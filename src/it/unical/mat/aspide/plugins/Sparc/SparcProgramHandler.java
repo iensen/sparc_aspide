@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -67,7 +68,33 @@ public class SparcProgramHandler extends InputStorageAdapter{
                     e1.printStackTrace();
                 }
             }
-            final ErrorMessage msg=new ErrorMessage(e.getMessage());
+            ArrayList<String> errors=new ArrayList<String>();
+            String msgStr=e.getMessage();
+
+            if(msgStr.startsWith("%WARNINGS")) {
+                msgStr=msgStr.substring(10);
+                int wIndex=0;
+                int nextIndex= msgStr.indexOf("%WARNING:");
+                while(true) {
+
+                    wIndex=nextIndex;
+                    nextIndex=msgStr.substring(wIndex+9).indexOf("%WARNING:");
+                    if(nextIndex==-1)
+                        nextIndex=msgStr.length();
+                    else
+                        nextIndex+=9;
+                    errors.add(msgStr.substring(wIndex+1,nextIndex));
+                    if(nextIndex==msgStr.length())
+                        break;
+                }
+
+            }
+
+            else {
+                errors.add(msgStr);
+            }
+            for(final String errorMsg:errors) {
+            final ErrorMessage msg=new ErrorMessage(errorMsg);
             GenericError error = new GenericError() {
 
                 @Override
@@ -82,7 +109,7 @@ public class SparcProgramHandler extends InputStorageAdapter{
 
                 @Override
                 public boolean isWarning() {
-                    return e.getMessage().startsWith("WARNING:");
+                    return errorMsg.startsWith("WARNING:");
                 }
 
                 @Override
@@ -108,9 +135,11 @@ public class SparcProgramHandler extends InputStorageAdapter{
             //JOptionPane.showMessageDialog(null, "10");
             addError(error);
             //JOptionPane.showMessageDialog(null, "11");
+            }
         } catch (FileNotFoundException e) {
         } catch (IOException e) {
         }
+
     }
 
     public void clearErrors(){
