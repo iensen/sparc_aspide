@@ -2,7 +2,7 @@
 <pluginlist>
 	<plugin>
 		<jar>
-			SparcPlugin_0.9.jar
+			SparcPlugin_1.0.jar
 		</jar>
 		<url>
 			https://github.com/iensen/sparc_aspide/blob/master/out/artifacts/SparcPlugin_jar/SparcPlugin.jar?raw=true
@@ -11,7 +11,7 @@
 			ASPIDE SPARC Handler
 		</name>
 		<version>
-			0.9
+			1.0
 		</version>
 		<author>
 			Evgenii Balai, Kristian Reale
