@@ -24,6 +24,7 @@ public class RewritingToASP {
             SimpleNode  astProgramNode = p.program();
             if (astProgramNode.jjtGetNumChildren() > 2) {   // if the program file is not empty!
                 InstanceGenerator generator = new InstanceGenerator(p.sortNameToExpression);
+
                 TypeChecker tc = new TypeChecker(p.sortNameToExpression, p.predicateArgumentSorts, p.constantsMapping, p.curlyBracketTerms, p.definedRecordNames, generator);
                 tc.checkRules((ASTprogramRules) astProgramNode.jjtGetChild(2));
                 if (outputStream != null)

@@ -125,19 +125,22 @@ public class Translator {
 		localElemCount = 0;
 		labelId = 0;
         // if we need warnings, we need to shift curlyBrackets:
-	    if(generateClingconWarnings) {
+
+        if(generateClingconWarnings) {
 	    	CurlyBracketsExpander cExpander= new CurlyBracketsExpander(sortNameToExpression); 
 	    	cExpander.ExpandCurlyBrackets((ASTsortDefinitions)program.jjtGetChild(0));
 	    }
-	    
-	  
-	    
+
+
+
+
 	    
 	    // generate sorts
 		for (String s : generatingSorts) {
 			String s2 = predicateArgumentSorts.get("#" + s).get(0);
 			gen.addSort(s2, sortNameToExpression.get(s), true);
 		}
+
 
 		writeDirectives(program);
 		translateRules((ASTprogramRules) program.jjtGetChild(2),writeWarningsToSTDERR);
@@ -151,6 +154,7 @@ public class Translator {
 				appendNewLineToTranslation();
 			}
 		}
+
 		// write warnings if the flag was set to true
 		if (writeWarningsToSTDERR) {
 			for (String warning : mainTranslator.getWarnings()) {
@@ -167,6 +171,7 @@ public class Translator {
 				throw new ParseException(warningStrings.toString());
 			}
 		}
+
         writeTranslatedProgram();
 		return translatedOutput.toString();
 
