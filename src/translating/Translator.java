@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+
+import configuration.ASPSolver;
+import configuration.Settings;
 import parser.ASTaggregateElement;
 import parser.ASTatom;
 import parser.ASTbody;
@@ -17,6 +20,7 @@ import parser.ASTprogram;
 import parser.ASTprogramRule;
 import parser.ASTprogramRules;
 import parser.ASTsimpleAtom;
+import parser.ASTsortDefinitions;
 import parser.ASTsortExpression;
 import parser.ASTsymbolicConstant;
 import parser.ASTsymbolicFunction;
@@ -30,10 +34,11 @@ import parser.SimpleNode;
 import parser.SparcTranslator;
 import parser.SparcTranslatorTreeConstants;
 import sorts.BuiltIn;
+import sorts.CurlyBracketsExpander;
 import translating.InstanceGenerator.GSort;
+import utils.Pair;
 import warnings.ExpandSolve;
 import warnings.Formula;
-import warnings.Pair;
 import warnings.RuleReducer;
 import warnings.StringListUtils;
 import warnings.WarningRuleCreator;
@@ -126,7 +131,16 @@ public class Translator {
 		translatedOutput = new StringBuilder();
 		localElemCount = 0;
 		labelId = 0;
-
+        // if we need warnings, we need to shift curlyBrackets:
+	    if(generateClingconWarnings) {
+	    	CurlyBracketsExpander cExpander= new CurlyBracketsExpander(sortNameToExpression); 
+	    	cExpander.ExpandCurlyBrackets((ASTsortDefinitions)program.jjtGetChild(0));
+	    }
+	    
+	  
+	    
+	    
+	    // generate sorts
 		for (String s : generatingSorts) {
 			String s2 = predicateArgumentSorts.get("#" + s).get(0);
 			gen.addSort(s2, sortNameToExpression.get(s), true);
@@ -160,8 +174,7 @@ public class Translator {
 				throw new ParseException(warningStrings.toString());
 			}
 		}
-		// write program to out.
-		writeTranslatedProgram();
+
 		return translatedOutput.toString();
 
 	}
@@ -173,8 +186,11 @@ public class Translator {
 	 *            of program abstract syntax tree
 	 */
 	private void writeDirectives(ASTprogram program) {
-		//add #maxint:
-		appendStringToTranslation("#maxint="+BuiltIn.getMaxInt()+".");
+		//add #maxint if the solver is DLV:
+		if(Settings.getSolver()==ASPSolver.DLV) {
+			appendStringToTranslation("#maxint="+BuiltIn.getMaxInt()+".");
+		}
+		
 		appendNewLineToTranslation();
 		//add other directives
 		for (String s : program.getdirectives()) {
@@ -918,12 +934,14 @@ public class Translator {
 		}
 		VariableFetcher vf = new VariableFetcher();
 		HashSet<String> vars = vf.fetchVariables(rule);
+		HashSet<String> varsToRemove = new HashSet<String>();
 		for (String var : vars) {
 			// remove local variables
 			if (!var.endsWith("_G")) {
-				vars.remove(var);
+				varsToRemove.add(var);
 			}
 		}
+		vars.removeAll(varsToRemove);
 		String ruleName = label;
 		if (vars.size() != 0) {
 			ruleName += "(";
@@ -963,7 +981,7 @@ public class Translator {
 	/**
 	 * Write program from internal string buffer to output
 	 */
-	private void writeTranslatedProgram() {
+	public void writeTranslatedProgram() {
 		try {
 			if (out != null) {
 				out.write(this.translatedOutput.toString());

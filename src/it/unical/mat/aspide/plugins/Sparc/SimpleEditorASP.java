@@ -22,17 +22,6 @@ public class SimpleEditorASP extends DLVEditorView{
 	public void save() {
 
 		try {
-            /*
-			FileOutputStream fw = new FileOutputStream(getFile());
-
-			ASPToSparc plugin = getToRuleMLRewriter();
-			ByteArrayInputStream in =
-					new ByteArrayInputStream(getText().getBytes());
-			plugin.rewrite(in, fw);
-
-			fw.flush();
-			fw.close();
-             */
 			setModified(false);			
 			originalText = getText();
 			AspideEnvironment.getInstance().notifyModified(this);			

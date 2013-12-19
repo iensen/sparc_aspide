@@ -1,27 +1,33 @@
 package externaltools;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-
 import configuration.Settings;
-
+/**
+ * This class implements operations which can be executed on DLV
+ */
 public class DLVSolver extends ExternalSolver{
 	
+	    /**
+	     * Path to DLV in the system
+	     */
 	    private String pathToDlv;
         
+	    /**
+	     * Constuctor
+	     * @throws FileNotFoundException if dlv was not found in the system
+	     */
 	    public DLVSolver() throws FileNotFoundException {
 	    	this(null);
 	    }
 	    
+	    /**
+	     * Constructor
+	     * @param program to be stored in program field of the solver object
+	     * @throws FileNotFoundException if dlv was not found in the system
+	     */
 	    public DLVSolver(String program) throws FileNotFoundException {
-	        this.program = program;
-	     
-	        System.out.println(program);
-	        
+	        this.program = program;    
 	        pathToDlv = searchForExe();
 	        if (pathToDlv == null) {
 	            throw new FileNotFoundException("dlv not found. "
@@ -29,66 +35,39 @@ public class DLVSolver extends ExternalSolver{
 	                    + "from your path, current folder, or the path specifiend by program argument.");
 	        }
 	    }
+	    
+	    /**
+	     * The method returns true if the program is satisfiable
+	     */
 	    public boolean isSatisfiable() {
 	       String output=run(true);
 	       return !output.contains("UNSATISFIABLE");
 	    }
         
+	    /**
+	     * This method returns the result of execution of the program on DLV
+	     * @param ignoreWarnings flag indicates whether warnings from DLV will be ignored
+	     * @return the output of DLV after running the program
+	     */
 	    public String run(boolean ignoreWarnings) {
-	        
-	    	   StringBuilder programOutput = new StringBuilder();
-		        Process process = null;
-		        String options=" -- ";
+		        String options=" -silent -- ";
+		        //check for option passed as sparc arguments
 	        	if(Settings.getSingletonInstance().getOptions()!=null)
 	        		options+=Settings.getSingletonInstance().getOptions();
-		        try {
-		            process = Runtime.getRuntime().exec(pathToDlv+options);
-		        } catch (IOException e) {
-		            System.err.println(e.getMessage());
-		        }
-		        
-		        OutputStream stdin = process.getOutputStream();
-		        InputStream stderr = process.getErrorStream();
-		        InputStream stdout = process.getInputStream();
-		        try {
-		            // write program to sparc translator:
-		            stdin.write(program.getBytes(), 0, program.length());
-
-		            stdin.flush();
-		            stdin.close();
-
-		            // read Std_error:
-		            BufferedReader brCleanUp = new BufferedReader(
-		                    new InputStreamReader(stderr));
-
-		            String line;
-		            StringBuilder errors = new StringBuilder();
-		            while ((line = brCleanUp.readLine()) != null) {
-
-	                    
-		                   errors.append(line);
-
-
-		            }
-
-		            if (errors.length() > 0) {
+		        OsUtils.runCommand(pathToDlv, options, program);
+		        if (OsUtils.errors.toString().length()>0 && !ignoreWarnings) {
 		            	System.out.println(program);
 		                throw new IllegalArgumentException(
 		                        "constructed dlv program constructed contains errors: "
-		                                + errors.toString());
-		            }
-		            brCleanUp = new BufferedReader(new InputStreamReader(stdout));
-		            while ((line = brCleanUp.readLine()) != null) {
-		                programOutput.append(line+System.getProperty("line.separator"));
-		            }
-		            brCleanUp.close();
-		        } catch (IOException ex) {
-		            ex.printStackTrace();
-		        }
-		        return programOutput.toString();
-			
+		                                + OsUtils.errors.toString());
+		            }		       
+		        return OsUtils.result.toString();
 	    }
 
+	    /**
+	     * Search for DLV executable in the system
+	     * @return the path to found executable or null if dlv was not found
+	     */
 	    private static String searchForExe() {
 	        String[] candidates = { "dlv", "./dlv", "./dlv.bin",
 	                "./dlv.exe","./dlv.i386-linux-elf-static.bin","./dlv.i386-apple-darwin.bin",
