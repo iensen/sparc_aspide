@@ -1,4 +1,6 @@
+
 <pluginpack name="ASPIDE SPARC Handler" version="1.02" author="Evgenii Balai, Kristian Reale" sdk_version="1.0">
+
  	<plugin name="SPARC" type="input,rewrite" class="it.unical.mat.aspide.plugins.Sparc.SparcPlugin">
     	<filetype extension="sp"/>    	
     	<filetype extension="sparc"/>    	
