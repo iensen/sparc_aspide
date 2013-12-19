@@ -43,6 +43,8 @@ import warnings.RuleReducer;
 import warnings.StringListUtils;
 import warnings.WarningRuleCreator;
 
+import javax.swing.*;
+
 public class Translator {
 	// mapping from sort names to sort expressions assigned to the sorts
 	private HashMap<String, ASTsortExpression> sortNameToExpression;
@@ -956,6 +958,7 @@ public class Translator {
 	public void writeTranslatedProgram() {
 		try {
 			if (out != null) {
+                JOptionPane.showMessageDialog(null, this.translatedOutput.toString(), "InfoBox: 1" , JOptionPane.INFORMATION_MESSAGE);
 				out.write(this.translatedOutput.toString());
 				out.flush();
 			}
