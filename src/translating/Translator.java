@@ -963,8 +963,7 @@ public class Translator {
 	public void writeTranslatedProgram() {
 		try {
 			if (out != null) {
-                JOptionPane.showMessageDialog(null, this.translatedOutput.toString(), "InfoBox: 1" , JOptionPane.INFORMATION_MESSAGE);
-				out.write(this.translatedOutput.toString());
+           		out.write(this.translatedOutput.toString());
 				out.flush();
 			}
 		} catch (IOException e) {
