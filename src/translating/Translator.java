@@ -36,7 +36,7 @@ import parser.SparcTranslatorTreeConstants;
 import sorts.BuiltIn;
 import sorts.CurlyBracketsExpander;
 import translating.InstanceGenerator.GSort;
-import utils.Pair;
+import utilities.Pair;
 import warnings.ExpandSolve;
 import warnings.Formula;
 import warnings.RuleReducer;
@@ -72,15 +72,6 @@ public class Translator {
 	
 	private RuleReducer ruleReducer;
 
-	/**
-	 * Constructor
-	 * 
-	 * @param sortNameToExpression
-	 * @param predicateArgumentSorts
-	 * @param ruleLabels
-	 * @param out
-	 * @param mainTranslator
-	 */
 	public Translator(
 
 	Writer out, SparcTranslator mainTranslator, InstanceGenerator gen,
@@ -174,7 +165,7 @@ public class Translator {
 				throw new ParseException(warningStrings.toString());
 			}
 		}
-
+        writeTranslatedProgram();
 		return translatedOutput.toString();
 
 	}
@@ -182,7 +173,7 @@ public class Translator {
 	/**
 	 * Rewrite #const and #maxint directives from SPARC to DLV program
 	 * 
-	 * @param root
+	 * @param program
 	 *            of program abstract syntax tree
 	 */
 	private void writeDirectives(ASTprogram program) {
@@ -483,9 +474,6 @@ public class Translator {
 	 * move them from predicates from aggregates and choice rules arguments to
 	 * bodies Example: p(X+1):q(X+2). becomes p(Y):p(Z),Y=X+1,Z=X+2, where Y and
 	 * Z are new variables in the rule
-	 * 
-	 * @param rule
-	 *            to be processed
 	 */
 	private void fetchLocalExpressions(SimpleNode node,
 			HashSet<String> variables) {
@@ -529,9 +517,6 @@ public class Translator {
 	 * Recursively fetch terms with variables from aggregates and choice rules
 	 * of the rule and add atoms, specifying sort of the terms to the body of
 	 * the corresponding aggregates and choice rules.
-	 * 
-	 * @param rule
-	 * @param fetchedTerms
 	 *            mapping between string representation of terms and arrayList
 	 *            of all sort the term must belong to.
 	 */
@@ -574,7 +559,6 @@ public class Translator {
 	 * corresponding aggregates and choice rules.
 	 * 
 	 * @param rule
-	 * @param fetchedTerms
 	 *            mapping between string representation of terms and arrayList
 	 *            of all sort the term must belong to.
 	 */
@@ -587,9 +571,7 @@ public class Translator {
 	 * of the terms to the body of the rule.
 	 * 
 	 * @param rule
-	 * @param fetchedTerms
-	 *            mapping between string representation of terms and arrayList
-	 *            of all sort the term must belong to.
+
 	 */
 	private void fetchGlobalTerms(ASTprogramRule rule,
 			ArrayList<ASTatom> newBodyAtoms) throws ParseException {
@@ -605,18 +587,8 @@ public class Translator {
 		newBodyAtoms.addAll(newAtoms);
 	}
 
-     /**
-	 * Go over the AST node and fill sets of unbounded and bounded variables
-	 * 
-	 * @param unboundedVariables
-	 *            set of found unbounded variables
-	 * @param boundedVariables
-	 *            set of found bounded variables
-	 * @param node
-	 *            node to explore
-	 * @param scope
-	 *            true if node is a child of a simpleAtom(either
-	 */
+
+
 	private void classifyVariables(HashSet<String> allVariables,
 			HashSet<String> simpleOccurVariables, HashSet<String> arithmeticVariables, SimpleNode node, boolean predicateScope, boolean arithmeticScope) {
 		if (node.getId() == SparcTranslatorTreeConstants.JJTVAR) {
