@@ -3,7 +3,7 @@
 	<plugin>
 		<jar>
 
-			SparcPlugin_1.02.jar
+			SparcPlugin_1.03.jar
 
 		</jar>
 		<url>
@@ -13,7 +13,7 @@
 			ASPIDE SPARC Handler
 		</name>
 		<version>
-			1.02
+			1.03
 		</version>
 		<author>
 			Evgenii Balai, Kristian Reale
