@@ -1,6 +1,9 @@
 package it.unical.mat.aspide.plugins.Sparc;
 
+import externaltools.DLVSolver;
 import externaltools.PrologSolver;
+import it.unical.mat.aspide.lgpl.plugin.environment.AspideEnvironment;
+import it.unical.mat.aspide.lgpl.plugin.interfaces.Plugin;
 import it.unical.mat.aspide.plugins.Sparc.exceptions.ParseException;
 import parser.*;
 import translating.InstanceGenerator;
@@ -9,9 +12,16 @@ import typechecking.TypeChecker;
 
 import javax.swing.*;
 import java.io.*;
+import java.util.Properties;
 
 
 public class RewritingToASP {
+
+    private Plugin pluginInstance;
+
+    public RewritingToASP(Plugin pluginInstance) {
+        this.pluginInstance = pluginInstance;
+    }
     //---------------------------
     //FROM Sparc to ASP
     //---------------------------
@@ -21,7 +31,7 @@ public class RewritingToASP {
         SparcTranslator p = new SparcTranslator(reader);
         Writer writer = null;
         try {
-            SimpleNode  astProgramNode = p.program();
+            SimpleNode astProgramNode = p.program();
             if (astProgramNode.jjtGetNumChildren() > 2) {   // if the program file is not empty!
                 InstanceGenerator generator = new InstanceGenerator(p.sortNameToExpression);
 
@@ -29,12 +39,19 @@ public class RewritingToASP {
                 tc.checkRules((ASTprogramRules) astProgramNode.jjtGetChild(2));
                 if (outputStream != null)
                     writer = new OutputStreamWriter(outputStream);
-                Translator tr=null;
-                if(PrologSolver.searchForExe()!=null)
-                   tr = new Translator(writer, p, generator, false, true);
-                else
+                Translator tr = null;
+
+                Properties plugProps = AspideEnvironment.getInstance().getPluginProperties(pluginInstance);
+                if (plugProps.getProperty("CHECK_WARNINGS", "FALSE").equals("TRUE")) {
+                    if (PrologSolver.searchForExe() != null)
+                        tr = new Translator(writer, p, generator, false, true);
+                    else {
+                        JOptionPane.showMessageDialog(null, "Swi-Prolog not found", "InfoBox: 1", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else
                     tr = new Translator(writer, p, generator, false, false);
                 tr.translateProgram((ASTprogram) astProgramNode, p.generatingSorts, false);
+                DLVSolver.searchForExe();
             }
             if (writer != null) {
                 writer.flush();

@@ -18,7 +18,6 @@ import parser.SimpleNode;
 import parser.SparcTranslatorTreeConstants;
 import utilities.Pair;
 
-
 // this class implements search and replacement of curly brackets in the sort definition
 // with equivalent sort definitions s.t no curly brackets will contain a functional symbol
 public class CurlyBracketsExpander {

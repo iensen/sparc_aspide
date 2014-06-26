@@ -3,7 +3,7 @@ package warnings;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import utils.Pair;
+import utilities.Pair;
 
 public class StringListUtils {
 
@@ -52,7 +52,11 @@ public class StringListUtils {
 				lastBeginIndex=i+1;
 			}
 		}
-		arguments.add(argumentString.substring(lastBeginIndex,argumentString.length()));
+		String toAdd = argumentString.substring(lastBeginIndex,argumentString.length());
+		if(toAdd.length() != 0 && !toAdd.matches("/^\\s*$/") ) {
+			arguments.add(toAdd);
+		}
+		
 		return arguments;
 		
 	}

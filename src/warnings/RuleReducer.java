@@ -28,7 +28,7 @@ import parser.ASTvar;
 import parser.SimpleNode;
 import parser.SparcTranslatorTreeConstants;
 import translating.InstanceGenerator;
-import utils.Pair;
+import utilities.Pair;
 
 /**
  * This class if for creation of a formula from an ASP rule The formula will be
@@ -393,6 +393,8 @@ public class RuleReducer {
 			return new PrimitiveFormula(new Term(termNode), gset);
 		case SparcTranslatorTreeConstants.JJTSETEXPRESSION:
 			return reduceTerm(termNode, (ASTsetExpression) child);
+		case SparcTranslatorTreeConstants.JJTFUNCTIONALSYMBOL:
+			return reduceTerm(termNode, (ASTfunctionalSymbol)child);
 		default:
 			return null;
 		}

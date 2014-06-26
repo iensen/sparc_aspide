@@ -2,7 +2,14 @@ package externaltools;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
+
 import configuration.Settings;
+import it.unical.mat.aspide.lgpl.bridgePlugin.environment.ExecutableInfo;
+import it.unical.mat.aspide.lgpl.plugin.environment.AspideEnvironment;
+
+import javax.swing.*;
+
 /**
  * This class implements operations which can be executed on DLV
  */
@@ -68,7 +75,7 @@ public class DLVSolver extends ExternalSolver{
 	     * Search for DLV executable in the system
 	     * @return the path to found executable or null if dlv was not found
 	     */
-	    private static String searchForExe() {
+	    /*private static String searchForExe() {
 	        String[] candidates = { "dlv", "./dlv", "./dlv.bin",
 	                "./dlv.exe","./dlv.i386-linux-elf-static.bin","./dlv.i386-apple-darwin.bin",
 	                "./dlv.x86-64-linux-elf-static.bin","./dlv.mingw.exe"};
@@ -84,5 +91,16 @@ public class DLVSolver extends ExternalSolver{
 	                return candidate;
 	        }
 	        return null;
+	    }
+	    */
+
+        public static String searchForExe() {
+            List<ExecutableInfo> solvers = AspideEnvironment.getInstance().getExecutablesSolvers(AspideEnvironment.ExecType.EXECUTABLES_SOLVERS);
+            for (ExecutableInfo solver : solvers) {
+                if(solver.getName().equals("DLV")) {
+                     return solver.getLocation();
+                }
+            }
+            return null;
 	    }
 }

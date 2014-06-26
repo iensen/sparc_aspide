@@ -2,12 +2,7 @@ package it.unical.mat.aspide.plugins.Sparc;
 
 import it.unical.mat.aspide.lgpl.bridgePlugin.model.exception.PluginException;
 import it.unical.mat.aspide.lgpl.plugin.environment.AspideProject;
-import it.unical.mat.aspide.lgpl.plugin.interfaces.CustomMenuItem;
-import it.unical.mat.aspide.lgpl.plugin.interfaces.EditorView;
-import it.unical.mat.aspide.lgpl.plugin.interfaces.InputPlugin;
-import it.unical.mat.aspide.lgpl.plugin.interfaces.InputStorageHandler;
-import it.unical.mat.aspide.lgpl.plugin.interfaces.RewritingPlugin;
-import it.unical.mat.aspide.lgpl.plugin.interfaces.RewritingPluginAdapter;
+import it.unical.mat.aspide.lgpl.plugin.interfaces.*;
 import it.unical.mat.aspide.plugins.Sparc.exceptions.ParseException;
 
 import java.io.File;
@@ -19,12 +14,13 @@ import java.util.List;
 
 public class SparcPlugin extends RewritingPluginAdapter implements InputPlugin,RewritingPlugin{
 
+
+
+    public SparcPlugin(){};
     SparcProgramHandler rewritingHandler;
 
 
-    public SparcPlugin() {
 
-    }
 
     public SimpleEditorASP getASPEditor(){
         List<RewritingPlugin> plugins = new LinkedList<RewritingPlugin>();
@@ -82,7 +78,7 @@ public class SparcPlugin extends RewritingPluginAdapter implements InputPlugin,R
             throws IOException, PluginException {
         final SparcProgramHandler handler = rewritingHandler;
         try {
-            (new RewritingToASP()).rewriteToASP(inputStream, outputStream);
+            (new RewritingToASP(this)).rewriteToASP(inputStream, outputStream);
             inputStream.close();
             outputStream.flush();
             outputStream.close();

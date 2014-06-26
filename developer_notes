@@ -1,0 +1,4 @@
+1. When creating a project in Intellij Idea, do not forget to point 'main source directory' , or else the jar file will only contain manifest.
+2. When merging updates from  Add writeTranslatedProgram() in function translated program
+3. Update DlvSolver.searchExe() function.
+

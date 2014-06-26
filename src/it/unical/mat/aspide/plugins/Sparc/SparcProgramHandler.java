@@ -5,7 +5,7 @@ import it.unical.mat.aspide.lgpl.bridgePlugin.model.StorageSupport;
 import it.unical.mat.aspide.lgpl.plugin.environment.AspideProject;
 import it.unical.mat.aspide.lgpl.plugin.interfaces.*;
 import it.unical.mat.aspide.plugins.Sparc.exceptions.ParseException;
-import warnings.Pair;
+
 
 import javax.swing.*;
 import java.io.File;
@@ -56,7 +56,7 @@ public class SparcProgramHandler extends InputStorageAdapter{
         FileInputStream fStream = null;
         try {
             fStream = new FileInputStream(getFile());
-            (new RewritingToASP()).rewriteToASP(fStream, null);
+            (new RewritingToASP(defaultRewriter)).rewriteToASP(fStream, null);
             fStream.close();
         } catch (final ParseException e) {
             if (fStream != null){
