@@ -56,7 +56,7 @@ public class SparcProgramHandler extends InputStorageAdapter{
         FileInputStream fStream = null;
         try {
             fStream = new FileInputStream(getFile());
-            (new RewritingToASP(defaultRewriter)).rewriteToASP(fStream, null);
+            (new RewritingToASP(defaultRewriter,true)).rewriteToASP(fStream, null);
             fStream.close();
         } catch (final ParseException e) {
             if (fStream != null){
@@ -70,6 +70,8 @@ public class SparcProgramHandler extends InputStorageAdapter{
             }
             ArrayList<String> errors=new ArrayList<String>();
             String msgStr=e.getMessage();
+
+
 
             if(msgStr.startsWith("%WARNINGS")) {
                 msgStr=msgStr.substring(10);

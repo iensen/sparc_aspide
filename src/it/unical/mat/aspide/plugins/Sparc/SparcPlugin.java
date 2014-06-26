@@ -78,7 +78,7 @@ public class SparcPlugin extends RewritingPluginAdapter implements InputPlugin,R
             throws IOException, PluginException {
         final SparcProgramHandler handler = rewritingHandler;
         try {
-            (new RewritingToASP(this)).rewriteToASP(inputStream, outputStream);
+            (new RewritingToASP(this,false)).rewriteToASP(inputStream, outputStream);
             inputStream.close();
             outputStream.flush();
             outputStream.close();

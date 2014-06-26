@@ -18,8 +18,10 @@ import java.util.Properties;
 public class RewritingToASP {
 
     private Plugin pluginInstance;
+    boolean throwWarningsException;
 
-    public RewritingToASP(Plugin pluginInstance) {
+    public RewritingToASP(Plugin pluginInstance, boolean throwWarningsException) {
+        this.throwWarningsException = throwWarningsException;
         this.pluginInstance = pluginInstance;
     }
     //---------------------------
@@ -50,8 +52,7 @@ public class RewritingToASP {
                     }
                 } else
                     tr = new Translator(writer, p, generator, false, false);
-                tr.translateProgram((ASTprogram) astProgramNode, p.generatingSorts, false);
-                DLVSolver.searchForExe();
+                tr.translateProgram((ASTprogram) astProgramNode, p.generatingSorts, !throwWarningsException);
             }
             if (writer != null) {
                 writer.flush();
@@ -62,6 +63,7 @@ public class RewritingToASP {
                 writer.flush();
                 writer.close();
             }
+
             throw new ParseException(pe.getMessage());
         } catch (FileNotFoundException fe) {  //  swi-prolog not found (used for warnings checking)
             if (writer != null) {
