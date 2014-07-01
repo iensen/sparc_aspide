@@ -1,7 +1,11 @@
 package externaltools;
 
+import it.unical.mat.aspide.lgpl.bridgePlugin.environment.ExecutableInfo;
+import it.unical.mat.aspide.lgpl.plugin.environment.AspideEnvironment;
+
 import java.io.*;
 import java.security.SecureRandom;
+import java.util.List;
 
 
 public class PrologSolver extends ExternalSolver {
@@ -58,19 +62,13 @@ public class PrologSolver extends ExternalSolver {
 	}
 
 	public static String searchForExe() {
-		String[] candidates = { "swipl.exe", "swipl" };
-		for (String candidate : candidates) {
-			boolean found = true;
-			try {
-				Process p = Runtime.getRuntime().exec(candidate);
-				p.destroy();
-			} catch (IOException ex) {
-				found = false;
-			}
-			if (found)
-				return candidate;
-		}
-		return null;
+        List<ExecutableInfo> solvers = AspideEnvironment.getInstance().getExecutablesSolvers(AspideEnvironment.ExecType.EXECUTABLES_SOLVERS);
+        for (ExecutableInfo solver : solvers) {
+            if(solver.getName().equals("swipl") ||  solver.getName().equals("SWIPL")) {
+                return solver.getLocation();
+            }
+        }
+        return null;
 	}
 
 

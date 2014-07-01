@@ -52,7 +52,7 @@ public class RewritingToASP {
                     }
                 } else
                     tr = new Translator(writer, p, generator, false, false);
-                tr.translateProgram((ASTprogram) astProgramNode, p.generatingSorts, !throwWarningsException);
+                    tr.translateProgram((ASTprogram) astProgramNode, p.generatingSorts, !throwWarningsException);
             }
             if (writer != null) {
                 writer.flush();
