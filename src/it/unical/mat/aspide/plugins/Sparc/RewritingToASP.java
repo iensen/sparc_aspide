@@ -49,10 +49,11 @@ public class RewritingToASP {
                         tr = new Translator(writer, p, generator, false, true);
                     else {
                         JOptionPane.showMessageDialog(null, "Swi-Prolog not found", "InfoBox: 1", JOptionPane.ERROR_MESSAGE);
+                        tr = new Translator(writer, p, generator, false, false);
                     }
                 } else
                     tr = new Translator(writer, p, generator, false, false);
-                    tr.translateProgram((ASTprogram) astProgramNode, p.generatingSorts, !throwWarningsException);
+                 tr.translateProgram((ASTprogram) astProgramNode, p.generatingSorts, !throwWarningsException);
             }
             if (writer != null) {
                 writer.flush();
